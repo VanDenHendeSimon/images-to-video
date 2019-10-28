@@ -35,8 +35,15 @@ def convert(selected_image):
 
     # Strip out frame numbers and extension from the sequence
     # to get more generic image name
-    generic_image_name = re.sub("\\d+", "", selected_image)
-    generic_image_name = os.path.splitext(generic_image_name)[0]
+
+    # 1. Remove extention
+    generic_image_name = selected_image.rstrip(selected_image_type)
+    # 2. Fetch frame digits
+    frame_digits = re.findall("\\d+", generic_image_name)
+    # 3. Strip out the frame digits
+    generic_image_name = generic_image_name.rstrip(
+        frame_digits[len(frame_digits)-1]
+    )
 
     """
     Go through the files and store movies and images
@@ -60,11 +67,19 @@ def convert(selected_image):
             if len(images) > 0:
                 # Compare the frame numbers to make sure
                 # the current file is next in line
+                # Strip out the generic name from the current file name
                 current_frame = int(
-                    re.search(r'_([0-9]+)', current_file).group(1)
+                    os.path.splitext(
+                        current_file[len(generic_image_name):]
+                    )[0]
                 )
+                # Get last image in the list,(= the previous frame)
+                last_image_basename = os.path.basename(images[len(images)-1])
+                # Get this image's frame number
                 last_image_frame = int(
-                    re.search(r'_([0-9]+)', images[len(images)-1]).group(1)
+                    os.path.splitext(
+                        last_image_basename[len(generic_image_name):]
+                    )[0]
                 )
 
                 # If this is the case, add the current file to the list
